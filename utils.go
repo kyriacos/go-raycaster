@@ -16,4 +16,15 @@ func normalizeAngle(angle float64) float64 {
 	return rAngle
 }
 
-// func minimapScale()
+// Get back values we can use with Go SDL2
+func minimapScale(val interface{}) int32 {
+	v := 0.0
+	switch val.(type) {
+	case int8, int, int32, int64, float32:
+		v = val.(float64)
+	default:
+		v = val.(float64)
+	}
+
+	return int32(MinimapScaleFactor * v)
+}
