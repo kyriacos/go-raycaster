@@ -10,15 +10,19 @@ import (
 const (
 	windowWidth  = 800
 	windowHeight = 600
+
+	fps             = 30
+	frameTimeLength = 1000 / fps
 )
 
 var (
 	window   *sdl.Window
 	renderer *sdl.Renderer
 
-	running = false
+	running               = false
+	ticksLastFrame uint32 = 0
 
-	playerX, playerY int32 = 0, 0
+	playerX, playerY = 0, 0
 )
 
 func run() (err error) {
@@ -65,8 +69,16 @@ func setup() {
 }
 
 func update() {
-	playerX += 2
-	playerY += 2
+	// stop and waste some time until we reach the target frame time length we want
+	// timeout = SDL_GetTicks() + frameTimeLength
+	// !SDL_TICKS_PASSED(SDL.GetTicks(), timeout)
+	sdl.Delay(frameTimeLength)
+
+	deltaTime := float64(sdl.GetTicks()-ticksLastFrame) / 1000.0
+	ticksLastFrame = sdl.GetTicks()
+
+	playerX += int(50.0 * deltaTime)
+	playerY += int(50.0 * deltaTime)
 }
 
 func render() {
@@ -75,7 +87,7 @@ func render() {
 
 	// render all game objects for current frame
 	renderer.SetDrawColor(255, 255, 0, 255)
-	rect := sdl.Rect{X: playerX, Y: playerY, W: 20, H: 20}
+	rect := sdl.Rect{X: int32(playerX), Y: int32(playerY), W: 20, H: 20}
 	renderer.FillRect(&rect)
 
 	// swap current buffer with back buffer
