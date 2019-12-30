@@ -30,12 +30,23 @@ func (p *Player) render(renderer *sdl.Renderer) {
 	}
 	renderer.FillRect(rect)
 
-	// draw line to show direction the player is looking
+	/*
+	 * Add a line to see which angle my player is turning
+	 *
+	 *    |\
+	 * 30 | \  y
+	 *    |  \
+	 *    |a  \
+	 *    -----
+	 *      x
+	 *
+	 */
+	length := 30 * MinimapScaleFactor
 	renderer.DrawLine(
 		int32(MinimapScaleFactor*player.x),
 		int32(MinimapScaleFactor*player.y),
-		int32(MinimapScaleFactor*player.x+math.Cos(player.rotationAngle)*40),
-		int32(MinimapScaleFactor*player.y+math.Sin(player.rotationAngle)*40),
+		int32(MinimapScaleFactor*player.x+math.Cos(player.rotationAngle)*length),
+		int32(MinimapScaleFactor*player.y+math.Sin(player.rotationAngle)*length),
 	)
 }
 

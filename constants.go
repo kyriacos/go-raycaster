@@ -7,7 +7,7 @@ const (
 	FrameTimeLength = 1000 / FPS
 
 	PI    = math.Pi
-	TwoPI = 2 * PI
+	TwoPI = 2.0 * PI
 
 	TileSize   = 64
 	MapNumRows = 13
