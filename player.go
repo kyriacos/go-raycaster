@@ -23,19 +23,19 @@ type Player struct {
 func (p *Player) render(renderer *sdl.Renderer) {
 	renderer.SetDrawColor(255, 255, 255, 255)
 	rect := &sdl.Rect{
-		X: int32(minimapScaleFactor * player.x),
-		Y: int32(minimapScaleFactor * player.y),
-		W: int32(minimapScaleFactor * player.width),
-		H: int32(minimapScaleFactor * player.height),
+		X: int32(MinimapScaleFactor * player.x),
+		Y: int32(MinimapScaleFactor * player.y),
+		W: int32(MinimapScaleFactor * player.width),
+		H: int32(MinimapScaleFactor * player.height),
 	}
 	renderer.FillRect(rect)
 
 	// draw line to show direction the player is looking
 	renderer.DrawLine(
-		int32(minimapScaleFactor*player.x),
-		int32(minimapScaleFactor*player.y),
-		int32(minimapScaleFactor*player.x+math.Cos(player.rotationAngle)*40),
-		int32(minimapScaleFactor*player.y+math.Sin(player.rotationAngle)*40),
+		int32(MinimapScaleFactor*player.x),
+		int32(MinimapScaleFactor*player.y),
+		int32(MinimapScaleFactor*player.x+math.Cos(player.rotationAngle)*40),
+		int32(MinimapScaleFactor*player.y+math.Sin(player.rotationAngle)*40),
 	)
 }
 

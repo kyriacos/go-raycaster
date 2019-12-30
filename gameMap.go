@@ -7,7 +7,7 @@ import (
 )
 
 // Level - type
-type Level [mapNumRows][mapNumCols]int
+type Level [MapNumRows][MapNumCols]int
 
 // GameMap - comment
 type GameMap struct {
@@ -15,21 +15,21 @@ type GameMap struct {
 }
 
 func (gm *GameMap) hasWallAt(x float64, y float64) bool {
-	if x < 0 || x > windowWidth || y < 0 || y > windowHeight {
+	if x < 0 || x > WindowWidth || y < 0 || y > WindowHeight {
 		return true
 	}
 
-	mapGridIndexX := int(math.Floor(x / tileSize))
-	mapGridIndexY := int(math.Floor(y / tileSize))
+	mapGridIndexX := int(math.Floor(x / TileSize))
+	mapGridIndexY := int(math.Floor(y / TileSize))
 
 	return gm.level[mapGridIndexY][mapGridIndexX] != 0
 }
 
 func (gm *GameMap) render(renderer *sdl.Renderer) {
-	for i := 0; i < mapNumRows; i++ {
-		for j := 0; j < mapNumCols; j++ {
-			tileX := j * tileSize // column
-			tileY := i * tileSize // row
+	for i := 0; i < MapNumRows; i++ {
+		for j := 0; j < MapNumCols; j++ {
+			tileX := j * TileSize // column
+			tileY := i * TileSize // row
 
 			var tileColor uint8 = 0
 			if gameMap.level[i][j] != 0 {
@@ -38,10 +38,10 @@ func (gm *GameMap) render(renderer *sdl.Renderer) {
 
 			renderer.SetDrawColor(tileColor, tileColor, tileColor, 255)
 			rect := &sdl.Rect{
-				X: int32(minimapScaleFactor * float64(tileX)),
-				Y: int32(minimapScaleFactor * float64(tileY)),
-				W: int32(math.Floor(minimapScaleFactor * tileSize)),
-				H: int32(math.Floor(minimapScaleFactor * tileSize)),
+				X: int32(MinimapScaleFactor * float64(tileX)),
+				Y: int32(MinimapScaleFactor * float64(tileY)),
+				W: int32(math.Floor(MinimapScaleFactor * TileSize)),
+				H: int32(math.Floor(MinimapScaleFactor * TileSize)),
 			}
 			renderer.FillRect(rect)
 		}

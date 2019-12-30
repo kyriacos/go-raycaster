@@ -44,8 +44,8 @@ func run() (err error) {
 		"RayCaster",
 		sdl.WINDOWPOS_CENTERED,
 		sdl.WINDOWPOS_CENTERED,
-		windowWidth,
-		windowHeight,
+		WindowWidth,
+		WindowHeight,
 		sdl.WINDOW_OPENGL)
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "Error creating SDL window: %s\n", err)
@@ -81,15 +81,15 @@ func setup() {
 
 	// initialize the player
 	player = &Player{
-		x:             windowWidth / 2,
-		y:             windowHeight / 2,
+		x:             WindowWidth / 2,
+		y:             WindowHeight / 2,
 		width:         1,
 		height:        1,
 		turnDirection: 0,
 		walkDirection: 0,
-		rotationAngle: pi / 2,
+		rotationAngle: PI / 2,
 		walkSpeed:     100,
-		turnSpeed:     70 * (pi / 180),
+		turnSpeed:     70 * (PI / 180),
 	}
 }
 
@@ -98,7 +98,7 @@ func update() {
 	 * timeout = SDL_GetTicks() + frameTimeLength
 	 * !SDL_TICKS_PASSED(SDL.GetTicks(), timeout)
 	 */
-	sdl.Delay(frameTimeLength)
+	sdl.Delay(FrameTimeLength)
 
 	deltaTime := float64(sdl.GetTicks()-ticksLastFrame) / 1000.0
 	ticksLastFrame = sdl.GetTicks()

@@ -3,21 +3,21 @@ package main
 import "math"
 
 const (
-	fps             = 30
-	frameTimeLength = 1000 / fps
+	FPS             = 30
+	FrameTimeLength = 1000 / FPS
 
-	pi    = math.Pi
-	twoPI = 2 * pi
+	PI    = math.Pi
+	TwoPI = 2 * PI
 
-	tileSize   = 64
-	mapNumRows = 13
-	mapNumCols = 20
+	TileSize   = 64
+	MapNumRows = 13
+	MapNumCols = 20
 
-	minimapScaleFactor = 1.0
+	MinimapScaleFactor = 1.0
 
-	windowWidth  = mapNumCols * tileSize
-	windowHeight = mapNumRows * tileSize
+	WindowWidth  = MapNumCols * TileSize
+	WindowHeight = MapNumRows * TileSize
 
-	fov     = 60 * (math.Pi / 180)
-	numRays = windowWidth
+	FOV     = 60 * (math.Pi / 180)
+	NumRays = WindowWidth
 )
