@@ -54,6 +54,15 @@ var (
 	player *Player
 )
 
+// GameMap - comment
+// type GameMap struct {
+// 	grid [mapNumRows][mapNumCols]int
+// }
+
+// func (gm *GameMap) hasWallAt(x float64, y float64) int {
+// 	return 0
+// }
+
 // Player - stuff
 type Player struct {
 	x, y          float64
@@ -68,6 +77,18 @@ type Player struct {
 	turnSpeed float64
 }
 
+func mapHasWallAt(x float64, y float64) bool {
+	if x < 0 || x > windowWidth || y < 0 || y > windowHeight {
+		return true
+	}
+
+	mapGridIndexX := int(math.Floor(x / tileSize))
+	mapGridIndexY := int(math.Floor(y / tileSize))
+
+	return grid[mapGridIndexY][mapGridIndexX] != 0
+
+}
+
 func movePlayer(deltaTime float64) {
 	// Turning: its the turn direction -1/+1/0 multiplied by the rotation speed
 	player.rotationAngle += float64(player.turnDirection) * player.turnSpeed * deltaTime
@@ -79,9 +100,11 @@ func movePlayer(deltaTime float64) {
 	newX := player.x + math.Cos(player.rotationAngle)*moveStep
 	newY := player.y + math.Sin(player.rotationAngle)*moveStep
 
-	player.x = newX
-	player.y = newY
 	// perform wall collision check
+	if !mapHasWallAt(newX, newY) {
+		player.x = newX
+		player.y = newY
+	}
 }
 
 func renderMap() {
