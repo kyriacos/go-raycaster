@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"image"
 	"image/color"
 	"math"
 	"os"
@@ -23,6 +24,28 @@ var level1 = Level{
 	{1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1},
 	{1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1},
 	{1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1},
+}
+
+var (
+	TextureWidth  = 64
+	TextureHeight = 64
+
+	wallTexture *image.RGBA
+)
+
+func createFakeTexture() *image.RGBA {
+	img := image.NewRGBA(image.Rect(0, 0, TextureWidth, TextureHeight))
+	// draw.Draw(img, img.Bounds(), &image.Uniform{color.RGBA{0, 0, 0, 255}}, image.Point{}, draw.Src)
+	for x := 0; x < TextureWidth; x++ {
+		for y := 0; y < TextureHeight; y++ {
+			if x%8 > 0 && y%8 > 0 {
+				img.SetRGBA(x, y, color.RGBA{R: 0, G: 0, B: 255, A: 255})
+			} else {
+				img.SetRGBA(x, y, color.RGBA{R: 0, G: 0, B: 0, A: 255})
+			}
+		}
+	}
+	return img
 }
 
 var (
@@ -70,7 +93,7 @@ func run() (err error) {
 		return
 	}
 
-	renderer, err = sdl.CreateRenderer(window, -1, 0) // -1 is the default driver (the graphics driver)
+	renderer, err = sdl.CreateRenderer(window, -1, sdl.RENDERER_SOFTWARE) // -1 is the default driver (the graphics driver)
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "Error creating SDL renderer: %s\n", err)
 		return
@@ -93,6 +116,8 @@ func destroy() {
 }
 
 func setup() {
+	// make fake texture
+	wallTexture = createFakeTexture()
 	// initialize map
 	gameMap = &GameMap{
 		level: level1,
@@ -106,7 +131,7 @@ func setup() {
 		height:        1,
 		turnDirection: 0,
 		walkDirection: 0,
-		rotationAngle: PI / 2,
+		rotationAngle: 2 * PI / 2,
 		walkSpeed:     100,
 		turnSpeed:     70 * (PI / 180),
 	}
@@ -178,15 +203,21 @@ func project3d() {
 			colorBuffer.Set(i, y, uint32ToColorRGBA(0x333333FF))
 		}
 
+		// same for all the columns of X
+		var textureOffsetX int
+		if ray.wasHitVertical { // use Y to get the offset instead
+			textureOffsetX = int(ray.wallHitY) % TextureHeight
+		} else {
+			textureOffsetX = int(ray.wallHitX) % TextureWidth
+		}
+
 		// render the wall from top to bottom - cols
 		for y := wallTopPixel; y < wallBottomPixel; y++ {
-			var c color.RGBA
-			if ray.wasHitVertical {
-				c = uint32ToColorRGBA(0xFFFFFFFF)
-			} else {
-				c = uint32ToColorRGBA(0xCCCCCCFF) // grey
-			}
-			colorBuffer.Set(i, y, c)
+			distanceFromTop := y + (wallStripHeight / 2) - (WindowHeight / 2)
+			textureOffsetY := float64(distanceFromTop) * float64(TextureHeight) / float64(wallStripHeight)
+
+			texel := wallTexture.At(int(textureOffsetX), int(textureOffsetY))
+			colorBuffer.Set(i, y, texel)
 		}
 
 		// set color for the floor

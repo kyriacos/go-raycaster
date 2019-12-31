@@ -26,6 +26,7 @@ func (cb *ColorBuffer) Clear(c ...uint32) {
 		col = c[0]
 	}
 
+	// draw.Draw(img, img.Bounds(), &image.Uniform{color.RGBA{0, 0, 0, 255}}, image.Point{}, draw.Src)
 	for x := 0; x < WindowWidth; x++ {
 		for y := 0; y < WindowHeight; y++ {
 			cb.SetRGBA(x, y, uint32ToColorRGBA(col))

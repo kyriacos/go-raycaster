@@ -21,7 +21,7 @@ type Ray struct {
 }
 
 // NewRay - constructor
-func NewRay(angle float64) Ray {
+func NewRay(angle float64) *Ray {
 	nAngle := normalizeAngle(angle)
 
 	// we have to figure out which way the ray is facing when trying to calculate the intersects.
@@ -38,7 +38,7 @@ func NewRay(angle float64) Ray {
 		isRayFacingRight = true
 	}
 
-	return Ray{
+	return &Ray{
 		angle:            nAngle,
 		wallHitX:         0.0,
 		wallHitY:         0.0,
