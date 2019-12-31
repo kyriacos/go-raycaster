@@ -3,7 +3,7 @@ package main
 import (
 	"fmt"
 	"image"
-	"image/color"
+	"image/png"
 	"math"
 	"os"
 
@@ -32,21 +32,6 @@ var (
 
 	wallTexture *image.RGBA
 )
-
-func createFakeTexture() *image.RGBA {
-	img := image.NewRGBA(image.Rect(0, 0, TextureWidth, TextureHeight))
-	// draw.Draw(img, img.Bounds(), &image.Uniform{color.RGBA{0, 0, 0, 255}}, image.Point{}, draw.Src)
-	for x := 0; x < TextureWidth; x++ {
-		for y := 0; y < TextureHeight; y++ {
-			if x%8 > 0 && y%8 > 0 {
-				img.SetRGBA(x, y, color.RGBA{R: 0, G: 0, B: 255, A: 255})
-			} else {
-				img.SetRGBA(x, y, color.RGBA{R: 0, G: 0, B: 0, A: 255})
-			}
-		}
-	}
-	return img
-}
 
 var (
 	window   *sdl.Window
@@ -117,7 +102,12 @@ func destroy() {
 
 func setup() {
 	// make fake texture
-	wallTexture = createFakeTexture()
+	f, _ := os.Open("./wall.png")
+	img, _ := png.Decode(f)
+	wallTexture, _ = img.(*image.RGBA)
+
+	// load textures
+
 	// initialize map
 	gameMap = &GameMap{
 		level: level1,
