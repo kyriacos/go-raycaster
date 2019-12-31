@@ -69,6 +69,9 @@ func uint32ToColorRGBA(h uint32) color.RGBA {
 	for the single pixel will be 4 bytes long.
 
 	Long description since this tripped my up a few times so i am making a lengthy note here.
+
+	UPDATE: and i just did not simply see there is a Stride which is the pitch basically and we can use
+			that instead! :) ooops
 */
 func calculatePitch() int {
 	// var a uint32
