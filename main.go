@@ -4,8 +4,12 @@ import (
 	"fmt"
 	"image"
 	"image/png"
+	"io/ioutil"
+	"log"
 	"math"
 	"os"
+	"path"
+	"strings"
 
 	"github.com/veandco/go-sdl2/sdl"
 )
@@ -30,7 +34,7 @@ var (
 	TextureWidth  = 64
 	TextureHeight = 64
 
-	wallTexture *image.RGBA
+	textures map[string]*image.RGBA
 )
 
 var (
@@ -100,13 +104,33 @@ func destroy() {
 	defer colorBufferTexture.Destroy()
 }
 
-func setup() {
-	// make fake texture
-	f, _ := os.Open("./wall.png")
-	img, _ := png.Decode(f)
-	wallTexture, _ = img.(*image.RGBA)
+func loadTextures() {
+	imageDir := "./images/"
+	files, err := ioutil.ReadDir(imageDir)
+	if err != nil {
+		log.Fatal(err)
+	}
 
-	// load textures
+	textures = make(map[string]*image.RGBA, len(files))
+	for _, file := range files {
+		filename := file.Name()
+		f, err := os.Open(imageDir + filename)
+		if err != nil {
+			log.Fatal(err)
+		}
+
+		img, err := png.Decode(f)
+		if err != nil {
+			log.Fatal(err)
+		}
+		imgRGBA, _ := img.(*image.RGBA)
+		textures[strings.TrimSuffix(filename, path.Ext(filename))] = imgRGBA
+	}
+}
+
+func setup() {
+	// Load textures from images directory
+	loadTextures()
 
 	// initialize map
 	gameMap = &GameMap{
@@ -206,7 +230,7 @@ func project3d() {
 			distanceFromTop := y + (wallStripHeight / 2) - (WindowHeight / 2)
 			textureOffsetY := float64(distanceFromTop) * float64(TextureHeight) / float64(wallStripHeight)
 
-			texel := wallTexture.At(int(textureOffsetX), int(textureOffsetY))
+			texel := textures["wall"].At(int(textureOffsetX), int(textureOffsetY))
 			colorBuffer.Set(i, y, texel)
 		}
 
