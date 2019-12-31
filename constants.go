@@ -13,7 +13,7 @@ const (
 	MapNumRows = 13
 	MapNumCols = 20
 
-	MinimapScaleFactor = 1.0
+	MinimapScaleFactor = 0.2
 
 	WindowWidth  = MapNumCols * TileSize
 	WindowHeight = MapNumRows * TileSize

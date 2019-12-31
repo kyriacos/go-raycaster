@@ -1,6 +1,9 @@
 package main
 
-import "math"
+import (
+	"image/color"
+	"math"
+)
 
 func distanceBetweenPoints(x1, y1, x2, y2 float64) float64 {
 	return math.Sqrt((x2-x1)*(x2-x1) + (y2-y1)*(y2-y1))
@@ -27,4 +30,14 @@ func minimapScale(val interface{}) int32 {
 	}
 
 	return int32(MinimapScaleFactor * v)
+}
+
+// Convert from Uint32 to RGBA color values
+func uint32ToColorRGBA(h uint32) color.RGBA {
+	return color.RGBA{
+		R: uint8(h >> 24),
+		G: uint8(h >> 16),
+		B: uint8(h >> 8),
+		A: uint8(h),
+	}
 }

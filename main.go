@@ -34,6 +34,9 @@ var (
 	gameMap *GameMap
 
 	rays Rays = Rays{}
+
+	colorBuffer        *ColorBuffer
+	colorBufferTexture *sdl.Texture
 )
 
 func castAllRays() {
@@ -84,6 +87,7 @@ func destroy() {
 	defer sdl.Quit()
 	defer window.Destroy()
 	defer renderer.Destroy()
+	defer colorBufferTexture.Destroy()
 }
 
 func setup() {
@@ -104,6 +108,23 @@ func setup() {
 		walkSpeed:     100,
 		turnSpeed:     70 * (PI / 180),
 	}
+
+	// initialize the color buffer
+	colorBuffer = (new(ColorBuffer)).Init()
+
+	// create color buffer texture
+	var err error
+	colorBufferTexture, err = renderer.CreateTexture(
+		sdl.PIXELFORMAT_ARGB8888,
+		sdl.TEXTUREACCESS_STREAMING,
+		WindowWidth,
+		WindowHeight,
+	)
+	if err != nil {
+		fmt.Fprintf(os.Stderr, "Error creating the texture: %s", err)
+		panic(err)
+	}
+
 }
 
 func update() {
@@ -121,9 +142,26 @@ func update() {
 	castAllRays()
 }
 
+func renderColorBuffer() {
+	// pitch is the size of the texture in bytes per row
+	// var s uint32
+	// pitch := int(uint32(WindowWidth) * uint32(unsafe.Sizeof(s)))
+	pitch := WindowWidth
+
+	// update the sdl texture
+	colorBufferTexture.Update(nil, colorBuffer.Pix, pitch)
+
+	// copy the texture to the renderer
+	renderer.Copy(colorBufferTexture, nil, nil) // nil and nil since we want to use the entire texture (src and dest used if you want to get a subset of the texture)
+}
+
 func render() {
 	renderer.SetDrawColor(0, 0, 0, 255)
 	renderer.Clear() // clear back buffer
+
+	colorBuffer.clear() // clear the color buffer
+	renderColorBuffer()
+	// colorBuffer.render()
 
 	// render all game objects for current frame
 	gameMap.render(renderer)
