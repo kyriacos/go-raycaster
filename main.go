@@ -2,6 +2,8 @@ package main
 
 import (
 	"fmt"
+	"image/color"
+	"math"
 	"os"
 
 	"github.com/veandco/go-sdl2/sdl"
@@ -143,25 +145,64 @@ func update() {
 }
 
 func renderColorBuffer() {
-	// pitch is the size of the texture in bytes per row
-	// var s uint32
-	// pitch := int(uint32(WindowWidth) * uint32(unsafe.Sizeof(s)))
-	pitch := WindowWidth
-
 	// update the sdl texture
-	colorBufferTexture.Update(nil, colorBuffer.Pix, pitch)
+	colorBufferTexture.Update(nil, colorBuffer.Pix, calculatePitch())
 
 	// copy the texture to the renderer
 	renderer.Copy(colorBufferTexture, nil, nil) // nil and nil since we want to use the entire texture (src and dest used if you want to get a subset of the texture)
+}
+
+func project3d() {
+	for i := 0; i < NumRays; i++ {
+		ray := rays[i]
+		// calculate perpendicular distance to remove the fisheye effect
+		perpendicularDistance := ray.distance * math.Cos(ray.angle-player.rotationAngle)
+		distanceToProjPlane := (WindowWidth / 2) / math.Tan(FOV/2)
+		projectedWallHeight := (TileSize / perpendicularDistance) * distanceToProjPlane
+
+		wallStripHeight := int(projectedWallHeight)
+
+		// where the wall starts - starts right after our ceiling
+		wallTopPixel := (WindowHeight / 2) - (wallStripHeight / 2) // middle of the screen and half the wall height
+		if wallTopPixel < 0 {
+			wallTopPixel = 0
+		}
+		// ends where the floor starts rendering
+		wallBottomPixel := (WindowHeight / 2) + (wallStripHeight / 2)
+		if wallBottomPixel > WindowHeight {
+			wallBottomPixel = WindowHeight
+		}
+
+		// set color for the ceiling
+		for y := 0; y < wallTopPixel; y++ {
+			colorBuffer.Set(i, y, uint32ToColorRGBA(0x333333FF))
+		}
+
+		// render the wall from top to bottom - cols
+		for y := wallTopPixel; y < wallBottomPixel; y++ {
+			var c color.RGBA
+			if ray.wasHitVertical {
+				c = uint32ToColorRGBA(0xFFFFFFFF)
+			} else {
+				c = uint32ToColorRGBA(0xCCCCCCFF) // grey
+			}
+			colorBuffer.Set(i, y, c)
+		}
+
+		// set color for the floor
+		for y := wallBottomPixel; y < WindowHeight; y++ {
+			colorBuffer.Set(i, y, uint32ToColorRGBA(0x777777FF))
+		}
+	}
 }
 
 func render() {
 	renderer.SetDrawColor(0, 0, 0, 255)
 	renderer.Clear() // clear back buffer
 
-	colorBuffer.clear() // clear the color buffer
+	project3d()
 	renderColorBuffer()
-	// colorBuffer.render()
+	colorBuffer.Clear(0x00000000) // clear the color buffer
 
 	// render all game objects for current frame
 	gameMap.render(renderer)

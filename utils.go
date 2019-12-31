@@ -23,8 +23,10 @@ func normalizeAngle(angle float64) float64 {
 func minimapScale(val interface{}) int32 {
 	v := 0.0
 	switch val.(type) {
-	case int8, int, int32, int64, float32:
-		v = val.(float64)
+	case int8, int32, int64:
+		v = float64(val.(int))
+	case int:
+		v = float64(val.(int))
 	default:
 		v = val.(float64)
 	}
@@ -40,4 +42,36 @@ func uint32ToColorRGBA(h uint32) color.RGBA {
 		B: uint8(h >> 8),
 		A: uint8(h),
 	}
+}
+
+// func clamp()
+
+/*
+	Calculating the pitch
+	[https://stackoverflow.com/questions/37643392/getting-all-pixel-valuesrgba]
+
+	RGBA struct in Go:
+	type RGBA struct {
+		// Pix holds the image's pixels, in R, G, B, A order. The pixel at
+		// (x, y) starts at Pix[(y-Rect.Min.Y)*Stride + (x-Rect.Min.X)*4].
+		Pix []uint8
+		// Stride is the Pix stride (in bytes) between vertically adjacent pixels.
+		Stride int
+		// Rect is the image's bounds.
+		Rect Rectangle
+	}
+	Since Pix holds the individual pixels in a uint8 array, the pitch as
+	defined in the SDL documentation [https://wiki.libsdl.org/SDL\_UpdateTexture]:
+	`pitch: the number of bytes in a row of pixel data, including padding between lines`
+
+	The number of bytes in a row of pixel data for each row for us is `WindowWidth * 4`.
+	Since every pixel (well rgba) is 4 bytes so each row has WindowWidth length and each RGBA value
+	for the single pixel will be 4 bytes long.
+
+	Long description since this tripped my up a few times so i am making a lengthy note here.
+*/
+func calculatePitch() int {
+	// var a uint32
+	// pitch := int(WindowWidth * unsafe.Sizeof(a))
+	return WindowWidth * 4
 }
