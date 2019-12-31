@@ -117,7 +117,7 @@ func setup() {
 	// create color buffer texture
 	var err error
 	colorBufferTexture, err = renderer.CreateTexture(
-		sdl.PIXELFORMAT_ARGB8888,
+		sdl.PIXELFORMAT_ABGR8888, // endianess https://forums.libsdl.org/viewtopic.php?p=39284
 		sdl.TEXTUREACCESS_STREAMING,
 		WindowWidth,
 		WindowHeight,
