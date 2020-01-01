@@ -7,3 +7,6 @@ There's plenty of comments in the code. Check it out if you are interested and j
 
 ##TODO:
 - Add more details
+- Clean up code
+- Add textures for floor and ceiling
+- Optimize the code. Figure out a way to make it run faster. It's very slow...
