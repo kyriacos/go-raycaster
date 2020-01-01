@@ -3,7 +3,10 @@ package main
 import (
 	"fmt"
 	"image"
+	"image/color"
+	"image/draw"
 	"image/png"
+	"io"
 	"io/ioutil"
 	"log"
 	"math"
@@ -34,7 +37,7 @@ var (
 	TextureWidth  = 64
 	TextureHeight = 64
 
-	textures map[string]*image.RGBA
+	textures map[string]*image.NRGBA
 )
 
 var (
@@ -111,21 +114,43 @@ func loadTextures() {
 		log.Fatal(err)
 	}
 
-	textures = make(map[string]*image.RGBA, len(files))
+	textures = make(map[string]*image.NRGBA, len(files))
 	for _, file := range files {
 		filename := file.Name()
 		f, err := os.Open(imageDir + filename)
 		if err != nil {
-			log.Fatal(err)
+			log.Fatalf("Could not open file: %s", err)
+		}
+		imgNRGBA, err := decodeImage(f)
+		if err != nil {
+			log.Fatalf("Could not decode image from file: %s. Error: %s", err, imageDir+filename)
 		}
 
-		img, err := png.Decode(f)
-		if err != nil {
-			log.Fatal(err)
-		}
-		imgRGBA, _ := img.(*image.RGBA)
-		textures[strings.TrimSuffix(filename, path.Ext(filename))] = imgRGBA
+		textures[strings.TrimSuffix(filename, path.Ext(filename))] = imgNRGBA
 	}
+}
+
+func decodeImage(r io.Reader) (*image.NRGBA, error) {
+	img, err := png.Decode(r)
+	if err != nil {
+		// log.Fatalf("Could not decode image: %s, - %s", err, r)
+		return nil, err
+	}
+
+	var imgNRGBA *image.NRGBA
+	var ok bool
+	if imgNRGBA, ok = img.(*image.NRGBA); !ok {
+		switch img.ColorModel() {
+		case color.RGBAModel:
+			imgNRGBA = image.NewNRGBA(img.Bounds())
+			draw.Draw(imgNRGBA, img.Bounds(), img, image.Point{}, draw.Src)
+		case color.GrayModel, color.Gray16Model, color.AlphaModel, color.Alpha16Model:
+			fallthrough
+		default:
+			// log.Fatalf("Unsupported image format. When decoding file: %s", imageDir+filename)
+		}
+	}
+	return imgNRGBA, nil
 }
 
 func setup() {
@@ -230,7 +255,7 @@ func project3d() {
 			distanceFromTop := y + (wallStripHeight / 2) - (WindowHeight / 2)
 			textureOffsetY := float64(distanceFromTop) * float64(TextureHeight) / float64(wallStripHeight)
 
-			texel := textures["wall"].At(int(textureOffsetX), int(textureOffsetY))
+			texel := textures["redbrick"].At(int(textureOffsetX), int(textureOffsetY))
 			colorBuffer.Set(i, y, texel)
 		}
 
