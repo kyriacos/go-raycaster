@@ -43,6 +43,14 @@ func uint32ToColorRGBA(h uint32) color.RGBA {
 		A: uint8(h),
 	}
 }
+func uint32ToColorNRGBA(h uint32) color.NRGBA {
+	return color.NRGBA{
+		R: uint8(h >> 24),
+		G: uint8(h >> 16),
+		B: uint8(h >> 8),
+		A: uint8(h),
+	}
+}
 
 // func clamp()
 

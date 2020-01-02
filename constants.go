@@ -21,3 +21,9 @@ const (
 	FOV     = 60 * (math.Pi / 180)
 	NumRays = WindowWidth
 )
+
+var (
+	ColorCeiling = uint32ToColorNRGBA(0x333333FF)
+	ColorFloor   = uint32ToColorNRGBA(0x777777FF)
+	ColorBlack   = uint32ToColorNRGBA(0x000000FF)
+)

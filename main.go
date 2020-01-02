@@ -1,6 +1,7 @@
 package main
 
 import (
+	"flag"
 	"fmt"
 	"image"
 	"image/color"
@@ -54,6 +55,8 @@ var (
 
 	colorBuffer        *ColorBuffer
 	colorBufferTexture *sdl.Texture
+
+	showFPS = flag.Bool("showFPS", false, "Show current FPS and on exit display the average FPS.")
 )
 
 func castAllRays() {
@@ -121,12 +124,15 @@ func loadTextures() {
 		if err != nil {
 			log.Fatalf("Could not open file: %s", err)
 		}
+		defer f.Close()
+
 		imgNRGBA, err := decodeImage(f)
 		if err != nil {
 			log.Fatalf("Could not decode image from file: %s. Error: %s", err, imageDir+filename)
 		}
 
 		textures[strings.TrimSuffix(filename, path.Ext(filename))] = imgNRGBA
+
 	}
 }
 
@@ -193,19 +199,19 @@ func setup() {
 
 }
 
-func update() {
+func update(elapsedMS float64) {
+	// deltaTime := float64(sdl.GetTicks()-ticksLastFrame) / 1000.0
+	// ticksLastFrame = sdl.GetTicks()
+
+	player.update(elapsedMS*1000.0, gameMap)
+
+	castAllRays()
+
 	/* stop and waste some time until we reach the target frame time length we want
 	 * timeout = SDL_GetTicks() + frameTimeLength
 	 * !SDL_TICKS_PASSED(SDL.GetTicks(), timeout)
 	 */
-	sdl.Delay(FrameTimeLength)
-
-	deltaTime := float64(sdl.GetTicks()-ticksLastFrame) / 1000.0
-	ticksLastFrame = sdl.GetTicks()
-
-	player.update(deltaTime, gameMap)
-
-	castAllRays()
+	// sdl.Delay(uint32(FrameTimeLength - deltaTime))
 }
 
 func renderColorBuffer() {
@@ -239,7 +245,7 @@ func project3d() {
 
 		// set color for the ceiling
 		for y := 0; y < wallTopPixel; y++ {
-			colorBuffer.Set(i, y, uint32ToColorRGBA(0x333333FF))
+			colorBuffer.SetNRGBA(i, y, ColorCeiling)
 		}
 
 		// same for all the columns of X
@@ -255,13 +261,13 @@ func project3d() {
 			distanceFromTop := y + (wallStripHeight / 2) - (WindowHeight / 2)
 			textureOffsetY := float64(distanceFromTop) * float64(TextureHeight) / float64(wallStripHeight)
 
-			texel := textures["redbrick"].At(int(textureOffsetX), int(textureOffsetY))
-			colorBuffer.Set(i, y, texel)
+			texel := textures["redbrick"].NRGBAAt(int(textureOffsetX), int(textureOffsetY))
+			colorBuffer.SetNRGBA(i, y, texel)
 		}
 
 		// set color for the floor
 		for y := wallBottomPixel; y < WindowHeight; y++ {
-			colorBuffer.Set(i, y, uint32ToColorRGBA(0x777777FF))
+			colorBuffer.SetNRGBA(i, y, ColorFloor)
 		}
 	}
 }
@@ -321,20 +327,47 @@ func processInput() {
 }
 
 func main() {
+	flag.Parse()
+
 	if err := run(); err != nil {
 		destroy()
 		os.Exit(1)
 	}
 
+	var (
+		counter           = 0
+		elapsedMS, sumFPS float64
+	)
+
 	setup()
 
 	running = true
 	for running {
+		start := sdl.GetPerformanceCounter()
 		processInput()
-		update()
+		update(elapsedMS)
 		render()
+		end := sdl.GetPerformanceCounter()
+
+		elapsedMS = float64(end-start) / float64(sdl.GetPerformanceFrequency()*1000.0)
+
+		sdl.Delay(uint32(math.Floor(16.666 - elapsedMS)))
+		elapsed := float64(end-start) / float64(sdl.GetPerformanceFrequency())
+
+		if *showFPS {
+			counter++
+			currentFPS := 1.0 / elapsed
+			sumFPS += currentFPS
+
+			fmt.Printf("FPS: %f\n", 1.0/elapsed)
+		}
 	}
 
 	destroy()
+
+	if *showFPS {
+		fmt.Printf("Average FPS: %f\n", sumFPS/float64(counter))
+	}
+
 	os.Exit(0)
 }
