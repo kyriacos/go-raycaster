@@ -4,14 +4,6 @@ import (
 	"encoding/binary"
 )
 
-func colorBufferToByte(vs ColorBuffer) []byte {
-	buf := make([]byte, len(vs)*4)
-	for i, v := range vs {
-		binary.BigEndian.PutUint32(buf[i*4:], v)
-	}
-	return buf
-}
-
 func uintsToBytes(vs []uint32) []byte {
 	buf := make([]byte, len(vs)*4)
 	for i, v := range vs {

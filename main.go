@@ -132,14 +132,12 @@ func loadTextures() {
 		}
 
 		textures[strings.TrimSuffix(filename, path.Ext(filename))] = imgNRGBA
-
 	}
 }
 
 func decodeImage(r io.Reader) (*image.NRGBA, error) {
 	img, err := png.Decode(r)
 	if err != nil {
-		// log.Fatalf("Could not decode image: %s, - %s", err, r)
 		return nil, err
 	}
 
@@ -153,7 +151,7 @@ func decodeImage(r io.Reader) (*image.NRGBA, error) {
 		case color.GrayModel, color.Gray16Model, color.AlphaModel, color.Alpha16Model:
 			fallthrough
 		default:
-			// log.Fatalf("Unsupported image format. When decoding file: %s", imageDir+filename)
+			log.Fatal("Unsupported image format.")
 		}
 	}
 	return imgNRGBA, nil
@@ -216,8 +214,8 @@ func update(elapsedMS float64) {
 
 func renderColorBuffer() {
 	// update the sdl texture
-	pitch := WindowWidth * 4                                               // stride
-	colorBufferTexture.Update(nil, colorBufferToByte(*colorBuffer), pitch) // calculatePitch())
+	pitch := WindowWidth * 4 // stride
+	colorBufferTexture.Update(nil, colorBuffer[:], pitch)
 
 	// copy the texture to the renderer
 	renderer.Copy(colorBufferTexture, nil, nil) // nil and nil since we want to use the entire texture (src and dest used if you want to get a subset of the texture)
@@ -246,8 +244,7 @@ func project3d() {
 
 		// set color for the ceiling
 		for y := 0; y < wallTopPixel; y++ {
-			// colorBuffer.SetNRGBA(i, y, ColorCeiling)
-			colorBuffer[WindowWidth*y+i] = 0x333333FF
+			colorBuffer.Set(i, y, 0x333333FF)
 		}
 
 		// same for all the columns of X
@@ -264,15 +261,13 @@ func project3d() {
 			textureOffsetY := float64(distanceFromTop) * float64(TextureHeight) / float64(wallStripHeight)
 
 			texel := textures["redbrick"].NRGBAAt(int(textureOffsetX), int(textureOffsetY))
-			// colorBuffer.SetNRGBA(i, y, texel)
 			var c uint32 = uint32(texel.R)<<24 | uint32(texel.G)<<16 | uint32(texel.B)<<8 | uint32(texel.A)
-			colorBuffer[WindowWidth*y+i] = c
+			colorBuffer.Set(i, y, c)
 		}
 
 		// set color for the floor
 		for y := wallBottomPixel; y < WindowHeight; y++ {
-			// colorBuffer.SetNRGBA(i, y, ColorFloor)
-			colorBuffer[WindowWidth*y+i] = 0x777777FF
+			colorBuffer.Set(i, y, 0x777777FF)
 		}
 	}
 }
@@ -283,7 +278,7 @@ func render() {
 
 	project3d()
 	renderColorBuffer()
-	colorBuffer.Clear(0x00000000) // clear the color buffer
+	// colorBuffer.Clear(0x00000000) // clear the color buffer
 
 	// render all game objects for current frame
 	gameMap.render(renderer)
