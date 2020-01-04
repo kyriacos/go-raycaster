@@ -216,7 +216,8 @@ func update(elapsedMS float64) {
 
 func renderColorBuffer() {
 	// update the sdl texture
-	colorBufferTexture.Update(nil, colorBuffer.Pix, colorBuffer.Stride) // calculatePitch())
+	pitch := WindowWidth * 4                                               // stride
+	colorBufferTexture.Update(nil, colorBufferToByte(*colorBuffer), pitch) // calculatePitch())
 
 	// copy the texture to the renderer
 	renderer.Copy(colorBufferTexture, nil, nil) // nil and nil since we want to use the entire texture (src and dest used if you want to get a subset of the texture)
@@ -245,7 +246,8 @@ func project3d() {
 
 		// set color for the ceiling
 		for y := 0; y < wallTopPixel; y++ {
-			colorBuffer.SetNRGBA(i, y, ColorCeiling)
+			// colorBuffer.SetNRGBA(i, y, ColorCeiling)
+			colorBuffer[WindowWidth*y+i] = 0x333333FF
 		}
 
 		// same for all the columns of X
@@ -262,12 +264,15 @@ func project3d() {
 			textureOffsetY := float64(distanceFromTop) * float64(TextureHeight) / float64(wallStripHeight)
 
 			texel := textures["redbrick"].NRGBAAt(int(textureOffsetX), int(textureOffsetY))
-			colorBuffer.SetNRGBA(i, y, texel)
+			// colorBuffer.SetNRGBA(i, y, texel)
+			var c uint32 = uint32(texel.R)<<24 | uint32(texel.G)<<16 | uint32(texel.B)<<8 | uint32(texel.A)
+			colorBuffer[WindowWidth*y+i] = c
 		}
 
 		// set color for the floor
 		for y := wallBottomPixel; y < WindowHeight; y++ {
-			colorBuffer.SetNRGBA(i, y, ColorFloor)
+			// colorBuffer.SetNRGBA(i, y, ColorFloor)
+			colorBuffer[WindowWidth*y+i] = 0x777777FF
 		}
 	}
 }
