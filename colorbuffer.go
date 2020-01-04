@@ -21,6 +21,11 @@ func (cb *ColorBuffer) Set(x, y int, c uint32) {
 	cb[WindowWidth*y*4+x*4+3] = byte(c)
 }
 
+// At - retrieve uint32 color value (ordered as rgba)
+func (cb *ColorBuffer) At(x, y int) uint32 {
+	return uint32(cb[WindowWidth*y*4+x*4+0])<<24 | uint32(cb[WindowWidth*y*4+x*4+1])<<16 | uint32(cb[WindowWidth*y*4+x*4+2])<<8 | uint32(cb[WindowWidth*y*4+x*4+3])
+}
+
 // Clear - Clear the color buffer. Set the value to a default or whatever is passed in
 func (cb *ColorBuffer) Clear(c ...uint32) {
 	var col uint32 = 0x00000000

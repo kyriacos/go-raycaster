@@ -1,6 +1,8 @@
 package main
 
-import "testing"
+import (
+	"testing"
+)
 
 func TestClear(t *testing.T) {
 	cb := NewColorBuffer()
@@ -28,6 +30,15 @@ func TestSet(t *testing.T) {
 		t.Error("Error setting the correct color")
 	}
 	if cb[WindowWidth*10*4+10*4+3] != 0xFF {
+		t.Error("Error setting the correct color")
+	}
+}
+
+func TestAt(t *testing.T) {
+	cb := NewColorBuffer()
+	cb.Set(10, 10, 0xEEEEFFFF)
+
+	if cb.At(10, 10) != 0xEEEEFFFF {
 		t.Error("Error setting the correct color")
 	}
 }
