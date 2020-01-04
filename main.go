@@ -53,7 +53,7 @@ var (
 
 	rays Rays = Rays{}
 
-	colorBuffer        *ColorBuffer
+	colorBuffer        ColorBuffer
 	colorBufferTexture *sdl.Texture
 
 	showFPS = flag.Bool("showFPS", false, "Show current FPS and on exit display the average FPS.")
@@ -180,7 +180,7 @@ func setup() {
 	}
 
 	// initialize the color buffer
-	colorBuffer = (new(ColorBuffer)).Init()
+	colorBuffer = NewColorBuffer(WindowWidth, WindowHeight)
 
 	// create color buffer texture
 	var err error
