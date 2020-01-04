@@ -4,38 +4,44 @@ import (
 	"testing"
 )
 
-func TestClear(t *testing.T) {
-	cb := NewColorBuffer()
+const (
+	width  = 20
+	height = 20
+)
 
-	for x := 0; x < WindowWidth; x++ {
-		for y := 0; y < WindowHeight; y++ {
-			if cb[WindowWidth*y+x] != 0x00 {
-				t.Errorf("Image is not uniform black, %b", cb[WindowWidth*y+x])
+func TestClear(t *testing.T) {
+	cb := NewColorBuffer(width, height)
+
+	for x := 0; x < width; x++ {
+		for y := 0; y < height; y++ {
+			if cb.Pixels[width*y+x] != 0x00 {
+				t.Errorf("Image is not uniform black, %b", cb.Pixels[width*y+x])
 			}
 		}
 	}
 }
 
 func TestSet(t *testing.T) {
-	cb := NewColorBuffer()
+	cb := NewColorBuffer(width, height)
+
 	cb.Set(10, 10, 0xFFFFFFFF)
 
-	if cb[WindowWidth*10*4+10*4+0] != 0xFF {
+	if cb.Pixels[width*10*4+10*4+0] != 0xFF {
 		t.Error("Error setting the correct color")
 	}
-	if cb[WindowWidth*10*4+10*4+1] != 0xFF {
+	if cb.Pixels[width*10*4+10*4+1] != 0xFF {
 		t.Error("Error setting the correct color")
 	}
-	if cb[WindowWidth*10*4+10*4+2] != 0xFF {
+	if cb.Pixels[width*10*4+10*4+2] != 0xFF {
 		t.Error("Error setting the correct color")
 	}
-	if cb[WindowWidth*10*4+10*4+3] != 0xFF {
+	if cb.Pixels[width*10*4+10*4+3] != 0xFF {
 		t.Error("Error setting the correct color")
 	}
 }
 
 func TestAt(t *testing.T) {
-	cb := NewColorBuffer()
+	cb := NewColorBuffer(width, height)
 	cb.Set(10, 10, 0xEEEEFFFF)
 
 	if cb.At(10, 10) != 0xEEEEFFFF {

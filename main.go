@@ -53,7 +53,7 @@ var (
 
 	rays Rays = Rays{}
 
-	colorBuffer        ColorBuffer
+	colorBuffer        *ColorBuffer
 	colorBufferTexture *sdl.Texture
 
 	showFPS = flag.Bool("showFPS", false, "Show current FPS and on exit display the average FPS.")
@@ -214,8 +214,7 @@ func update(elapsedMS float64) {
 
 func renderColorBuffer() {
 	// update the sdl texture
-	pitch := WindowWidth * 4 // stride
-	colorBufferTexture.Update(nil, colorBuffer[:], pitch)
+	colorBufferTexture.Update(nil, colorBuffer.Pixels, colorBuffer.GetPitch())
 
 	// copy the texture to the renderer
 	renderer.Copy(colorBufferTexture, nil, nil) // nil and nil since we want to use the entire texture (src and dest used if you want to get a subset of the texture)

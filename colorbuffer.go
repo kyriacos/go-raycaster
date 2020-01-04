@@ -1,28 +1,40 @@
 package main
 
-// ColorBuffer - the buffer that will store all the information for the pixels on the screen will be copied into an SDL Texture
-type ColorBuffer []byte
-
-// NewColorBuffer - Create new colorbuffer and initialize it
-func NewColorBuffer(width, height int) ColorBuffer {
-	cb := make(ColorBuffer, width*height*4, width*height*4)
-	return cb
+// ColorBuffer - Stores all the information for the pixels on the screen will be copied into an SDL Texture
+type ColorBuffer struct {
+	Pixels        []byte
+	Stride        int // Width * 4
+	Width, Height int
 }
 
-// Init - Initialize the ColorBuffer with a rectangle for the image based on the window width and height
-func (cb ColorBuffer) Init() ColorBuffer {
-	return cb
+// NewColorBuffer - Create new ColorBuffer based on the supplied width and height. Set the Stride at the time we initialize the ColorBuffer
+func NewColorBuffer(w, h int) *ColorBuffer {
+	buf := make([]byte, w*h*4, w*h*4)
+	return &ColorBuffer{
+		Pixels: buf,
+		Stride: w * 4,
+		Width:  w,
+		Height: h,
+	}
+}
+
+// GetPitch - Returns the Stride. I just remember pitch instead of Stride so i added this method
+func (cb *ColorBuffer) GetPitch() int {
+	return cb.Stride
+}
+
+// PixOffset returns the index of the first element of Pix that corresponds to the pixel at (x, y).
+func (cb *ColorBuffer) PixOffset(x, y int) int {
+	// Width*4*y + x*4
+	return cb.Stride*y + x*4
 }
 
 // Set - set the values in the bytes buffer
-func (cb ColorBuffer) Set(x, y int, c uint32) {
-	// cb[WindowWidth*y*4+x*4+0] = byte(c >> 24)
-	// cb[WindowWidth*y*4+x*4+1] = byte(c >> 16)
-	// cb[WindowWidth*y*4+x*4+2] = byte(c >> 8)
+func (cb *ColorBuffer) Set(x, y int, c uint32) {
 	// cb[WindowWidth*y*4+x*4+3] = byte(c)
 
-	i := WindowWidth*y*4 + x*4
-	s := cb[i : i+4 : i+4] // Small cap improves performance, see https://golang.org/issue/27857
+	i := cb.PixOffset(x, y)
+	s := cb.Pixels[i : i+4 : i+4]
 	s[0] = byte(c >> 24)
 	s[1] = byte(c >> 16)
 	s[2] = byte(c >> 8)
@@ -30,12 +42,16 @@ func (cb ColorBuffer) Set(x, y int, c uint32) {
 }
 
 // At - retrieve uint32 color value (ordered as rgba)
-func (cb ColorBuffer) At(x, y int) uint32 {
-	return uint32(cb[WindowWidth*y*4+x*4+0])<<24 | uint32(cb[WindowWidth*y*4+x*4+1])<<16 | uint32(cb[WindowWidth*y*4+x*4+2])<<8 | uint32(cb[WindowWidth*y*4+x*4+3])
+func (cb *ColorBuffer) At(x, y int) uint32 {
+	offset := cb.PixOffset(x, y)
+	return uint32(cb.Pixels[offset])<<24 |
+		uint32(cb.Pixels[offset+1])<<16 |
+		uint32(cb.Pixels[offset+2])<<8 |
+		uint32(cb.Pixels[offset+3])
 }
 
 // Clear - Clear the color buffer. Set the value to a default or whatever is passed in
-func (cb ColorBuffer) Clear(c ...uint32) {
+func (cb *ColorBuffer) Clear(c ...uint32) {
 	var col uint32 = 0x00000000
 
 	if len(c) > 0 {
