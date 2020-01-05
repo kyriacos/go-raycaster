@@ -6,15 +6,12 @@ import (
 	"github.com/veandco/go-sdl2/sdl"
 )
 
-// Level - type
-type Level [MapNumRows][MapNumCols]int
-
 // GameMap - comment
 type GameMap struct {
-	level Level
+	level *Level
 }
 
-func NewGameMap(l Level) *GameMap {
+func NewGameMap(l *Level) *GameMap {
 	return &GameMap{level: l}
 }
 
@@ -26,7 +23,7 @@ func (gm *GameMap) hasWallAt(x float64, y float64) bool {
 	mapGridIndexX := int(math.Floor(x / TileSize))
 	mapGridIndexY := int(math.Floor(y / TileSize))
 
-	return gm.level[mapGridIndexY][mapGridIndexX] != 0
+	return gm.level.At(mapGridIndexY, mapGridIndexX) != 0
 }
 
 func (gm *GameMap) render(renderer *sdl.Renderer) {
@@ -45,7 +42,7 @@ func (gm *GameMap) render(renderer *sdl.Renderer) {
 			tileY := i * TileSize // row
 
 			var tileColor uint8 = 0
-			if gameMap.level[i][j] != 0 {
+			if gm.level.At(i, j) != 0 {
 				tileColor = 255
 			}
 

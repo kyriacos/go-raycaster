@@ -167,7 +167,7 @@ func (r *Ray) cast(angle float64) *Ray {
 		if gameMap.hasWallAt(testTouchX, testTouchY) {
 			horzWallHitX = nextHorzTouchX
 			horzWallHitY = nextHorzTouchY
-			horzWallContent = gameMap.level[int(math.Floor(testTouchY/TileSize))][int(math.Floor(testTouchX/TileSize))]
+			horzWallContent = gameMap.level.At(int(math.Floor(testTouchY/TileSize)), int(math.Floor(testTouchX/TileSize)))
 			foundHorizontalWallHit = true
 			break
 		} else {
@@ -235,7 +235,7 @@ func (r *Ray) cast(angle float64) *Ray {
 		if gameMap.hasWallAt(testTouchX, nextVertTouchY) {
 			vertWallHitX = nextVertTouchX
 			vertWallHitY = nextVertTouchY
-			vertWallContent = gameMap.level[int(math.Floor(testTouchY/TileSize))][int(math.Floor(testTouchX/TileSize))]
+			vertWallContent = gameMap.level.At(int(math.Floor(testTouchY/TileSize)), int(math.Floor(testTouchX/TileSize)))
 
 			foundVerticalWallHit = true
 			break
