@@ -14,6 +14,10 @@ type GameMap struct {
 	level Level
 }
 
+func NewGameMap(l Level) *GameMap {
+	return &GameMap{level: l}
+}
+
 func (gm *GameMap) hasWallAt(x float64, y float64) bool {
 	if x < 0 || x > WindowWidth || y < 0 || y > WindowHeight {
 		return true

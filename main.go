@@ -35,13 +35,6 @@ var level1 = Level{
 }
 
 var (
-	TextureWidth  = 64
-	TextureHeight = 64
-
-	textures map[string]*image.NRGBA
-)
-
-var (
 	window   *sdl.Window
 	renderer *sdl.Renderer
 
@@ -50,11 +43,12 @@ var (
 
 	player  *Player
 	gameMap *GameMap
-
-	rays Rays = Rays{}
+	rays    *Rays
 
 	colorBuffer        *ColorBuffer
 	colorBufferTexture *sdl.Texture
+
+	textures map[string]*image.NRGBA
 
 	showFPS = flag.Bool("showFPS", false, "Show current FPS and on exit display the average FPS.")
 )
@@ -64,8 +58,8 @@ func castAllRays() {
 	angle := player.rotationAngle - (FOV / 2)
 
 	for column := 0; column < NumRays; column++ {
-		ray := NewRay(angle)
-		rays[column] = ray.cast()
+		ray := rays[column]
+		ray.cast(angle)
 		angle += FOV / NumRays
 	}
 }
@@ -162,9 +156,10 @@ func setup() {
 	loadTextures()
 
 	// initialize map
-	gameMap = &GameMap{
-		level: level1,
-	}
+	gameMap = NewGameMap(level1)
+
+	// initialize rays
+	rays = NewRays()
 
 	// initialize the player
 	player = &Player{

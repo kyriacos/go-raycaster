@@ -2,6 +2,7 @@ package main
 
 import "math"
 
+// Various Constants
 const (
 	FPS             = 30
 	FrameTimeLength = 1000 / FPS
@@ -20,8 +21,12 @@ const (
 
 	FOV     = 60 * (math.Pi / 180)
 	NumRays = WindowWidth
+
+	TextureWidth  = 64
+	TextureHeight = 64
 )
 
+// Some base colors
 var (
 	ColorCeiling = uint32ToColorNRGBA(0x333333FF)
 	ColorFloor   = uint32ToColorNRGBA(0x777777FF)

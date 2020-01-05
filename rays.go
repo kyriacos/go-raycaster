@@ -9,6 +9,14 @@ import (
 // Rays - many rays
 type Rays [NumRays]*Ray
 
+func NewRays() *Rays {
+	r := new(Rays)
+	for i := range r {
+		r[i] = NewRay()
+	}
+	return r
+}
+
 // Ray - struct
 type Ray struct {
 	angle, wallHitX, wallHitY, distance float64
@@ -21,33 +29,17 @@ type Ray struct {
 }
 
 // NewRay - constructor
-func NewRay(angle float64) *Ray {
-	nAngle := normalizeAngle(angle)
-
-	// we have to figure out which way the ray is facing when trying to calculate the intersects.
-	// Math.PI = 180 Degrees
-	isRayFacingDown := false
-	if nAngle > 0 && nAngle < PI {
-		isRayFacingDown = true
-	}
-
-	// 0.5 * Math.PI = 90 Degrees
-	// 1.5 * Math.PI = 270 Degrees
-	isRayFacingRight := false
-	if nAngle < 0.5*PI || nAngle > 1.5*PI {
-		isRayFacingRight = true
-	}
-
+func NewRay() *Ray {
 	return &Ray{
-		angle:            nAngle,
-		wallHitX:         0.0,
-		wallHitY:         0.0,
-		distance:         0.0,
+		angle:            0.0,
+		wallHitX:         -1,
+		wallHitY:         -1,
+		distance:         -1,
 		wasHitVertical:   false,
-		isRayFacingDown:  isRayFacingDown,
-		isRayFacingUp:    !isRayFacingDown,
-		isRayFacingRight: isRayFacingRight,
-		isRayFacingLeft:  !isRayFacingRight,
+		isRayFacingDown:  false,
+		isRayFacingUp:    false,
+		isRayFacingRight: false,
+		isRayFacingLeft:  false,
 
 		wallHitContent: -1, // set to -1 for debugging in case
 	}
@@ -63,8 +55,26 @@ func (r *Ray) render(renderer *sdl.Renderer, x, y float64) {
 	)
 }
 
-func (r *Ray) cast() *Ray {
+func (r *Ray) cast(angle float64) *Ray {
 	var xIntercept, yIntercept, xStep, yStep float64
+
+	r.angle = normalizeAngle(angle)
+
+	// we have to figure out which way the ray is facing when trying to calculate the intersects.
+	// Math.PI = 180 Degrees
+	r.isRayFacingDown = false
+	if r.angle > 0 && r.angle < PI {
+		r.isRayFacingDown = true
+	}
+	r.isRayFacingUp = !r.isRayFacingDown
+
+	// 0.5 * Math.PI = 90 Degrees
+	// 1.5 * Math.PI = 270 Degrees
+	r.isRayFacingRight = false
+	if r.angle < 0.5*PI || r.angle > 1.5*PI {
+		r.isRayFacingRight = true
+	}
+	r.isRayFacingLeft = !r.isRayFacingRight
 
 	/*
 	 * ================================
