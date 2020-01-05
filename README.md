@@ -28,9 +28,10 @@ I am very curious as to why the image.NRGBA was so much slower. I actually went 
 ## TODO:
 
 - [x] Load levels from external file
-- [ ] Remove extra global VARS
+- [x] Remove extra global VARS
 - [ ] Determine texture size dynamically or set as a constant
 - [ ] Add textures for floor and ceiling
 - [ ] Clean up FPS calculation code
-- [ ] Don't use the global gameMap variable in Ray.cast
+- [x] Don't use the global gameMap variable in Ray.cast
+- [x] Use static sdl.Renderer instead of passing it everywhere. Create Game struct to hold all the statics
 - [x] Optimize the code. Figure out a way to make it run faster. It's very slow...

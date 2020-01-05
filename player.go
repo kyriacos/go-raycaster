@@ -20,15 +20,15 @@ type Player struct {
 	turnSpeed float64
 }
 
-func (p *Player) render(renderer *sdl.Renderer) {
-	renderer.SetDrawColor(255, 255, 255, 255)
+func (p *Player) Render() {
+	G.Renderer.SetDrawColor(255, 255, 255, 255)
 	rect := &sdl.Rect{
-		X: int32(MinimapScaleFactor * player.x),
-		Y: int32(MinimapScaleFactor * player.y),
-		W: int32(MinimapScaleFactor * player.width),
-		H: int32(MinimapScaleFactor * player.height),
+		X: int32(MinimapScaleFactor * p.x),
+		Y: int32(MinimapScaleFactor * p.y),
+		W: int32(MinimapScaleFactor * p.width),
+		H: int32(MinimapScaleFactor * p.height),
 	}
-	renderer.FillRect(rect)
+	G.Renderer.FillRect(rect)
 
 	/*
 	 * Add a line to see which angle my player is turning
@@ -42,34 +42,34 @@ func (p *Player) render(renderer *sdl.Renderer) {
 	 *
 	 */
 	length := 30 * MinimapScaleFactor
-	renderer.DrawLine(
-		int32(MinimapScaleFactor*player.x),
-		int32(MinimapScaleFactor*player.y),
-		int32(MinimapScaleFactor*player.x+math.Cos(player.rotationAngle)*length),
-		int32(MinimapScaleFactor*player.y+math.Sin(player.rotationAngle)*length),
+	G.Renderer.DrawLine(
+		int32(MinimapScaleFactor*p.x),
+		int32(MinimapScaleFactor*p.y),
+		int32(MinimapScaleFactor*p.x+math.Cos(p.rotationAngle)*length),
+		int32(MinimapScaleFactor*p.y+math.Sin(p.rotationAngle)*length),
 	)
 }
 
 // tick
 // note: maybe i don't need to pass the gamemap and just have the collision detection inside my 'main' update
-func (p *Player) update(deltaTime float64, gm *GameMap) {
-	move(deltaTime, gm)
+func (p *Player) Update(deltaTime float64) {
+	p.move(deltaTime)
 }
 
-func move(deltaTime float64, gm *GameMap) {
+func (p *Player) move(deltaTime float64) {
 	// Turning: its the turn direction -1/+1/0 multiplied by the rotation speed
-	player.rotationAngle += float64(player.turnDirection) * player.turnSpeed * deltaTime
+	p.rotationAngle += float64(p.turnDirection) * p.turnSpeed * deltaTime
 
 	// Moving:  direction -1/+1/0 multiplied by how fast (speed)
 	//          the player should move to calculate how much of a jump/step we make
-	moveStep := float64(player.walkDirection) * player.walkSpeed * deltaTime
+	moveStep := float64(p.walkDirection) * p.walkSpeed * deltaTime
 
-	newX := player.x + math.Cos(player.rotationAngle)*moveStep
-	newY := player.y + math.Sin(player.rotationAngle)*moveStep
+	newX := p.x + math.Cos(p.rotationAngle)*moveStep
+	newY := p.y + math.Sin(p.rotationAngle)*moveStep
 
 	// perform wall collision check
-	if !gameMap.hasWallAt(newX, newY) {
-		player.x = newX
-		player.y = newY
+	if !G.GameMap.HasWallAt(newX, newY) {
+		p.x = newX
+		p.y = newY
 	}
 }

@@ -19,31 +19,17 @@ import (
 )
 
 var (
-	window   *sdl.Window
-	renderer *sdl.Renderer
-
-	running               = false
-	ticksLastFrame uint32 = 0
-
-	player  *Player
-	gameMap *GameMap
-	rays    *Rays
-
-	colorBuffer        *ColorBuffer
-	colorBufferTexture *sdl.Texture
-
-	textures map[string]*image.NRGBA
-
+	G       *Game
 	showFPS = flag.Bool("showFPS", false, "Show current FPS and on exit display the average FPS.")
 )
 
 func castAllRays() {
 	// initial ray angle
-	angle := player.rotationAngle - (FOV / 2)
+	angle := G.Player.rotationAngle - (FOV / 2)
 
 	for column := 0; column < NumRays; column++ {
-		ray := rays[column]
-		ray.cast(angle)
+		ray := G.Rays[column]
+		ray.Cast(angle)
 		angle += FOV / NumRays
 	}
 }
@@ -54,7 +40,7 @@ func run() (err error) {
 		return
 	}
 
-	window, err = sdl.CreateWindow(
+	G.Window, err = sdl.CreateWindow(
 		"RayCaster",
 		sdl.WINDOWPOS_CENTERED,
 		sdl.WINDOWPOS_CENTERED,
@@ -66,13 +52,13 @@ func run() (err error) {
 		return
 	}
 
-	renderer, err = sdl.CreateRenderer(window, -1, sdl.RENDERER_SOFTWARE) // -1 is the default driver (the graphics driver)
+	G.Renderer, err = sdl.CreateRenderer(G.Window, -1, sdl.RENDERER_SOFTWARE) // -1 is the default driver (the graphics driver)
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "Error creating SDL renderer: %s\n", err)
 		return
 	}
 
-	if err = renderer.SetDrawBlendMode(sdl.BLENDMODE_BLEND); err != nil {
+	if err = G.Renderer.SetDrawBlendMode(sdl.BLENDMODE_BLEND); err != nil {
 		fmt.Fprintf(os.Stderr, "Failed to set blend mode: %s", err)
 		return
 	}
@@ -83,9 +69,9 @@ func run() (err error) {
 func destroy() {
 	// defer order?
 	defer sdl.Quit()
-	defer window.Destroy()
-	defer renderer.Destroy()
-	defer colorBufferTexture.Destroy()
+	defer G.Window.Destroy()
+	defer G.Renderer.Destroy()
+	defer G.ColorBufferTexture.Destroy()
 }
 
 func loadTextures() {
@@ -95,7 +81,7 @@ func loadTextures() {
 		log.Fatal(err)
 	}
 
-	textures = make(map[string]*image.NRGBA, len(files))
+	G.Textures = make(map[string]*image.NRGBA, len(files))
 	for _, file := range files {
 		filename := file.Name()
 		f, err := os.Open(imageDir + filename)
@@ -109,7 +95,7 @@ func loadTextures() {
 			log.Fatalf("Could not decode image from file: %s. Error: %s", err, imageDir+filename)
 		}
 
-		textures[strings.TrimSuffix(filename, path.Ext(filename))] = imgNRGBA
+		G.Textures[strings.TrimSuffix(filename, path.Ext(filename))] = imgNRGBA
 	}
 }
 
@@ -141,13 +127,13 @@ func setup() {
 
 	// initialize map
 	level := LoadLevel("./levels/level1.json")
-	gameMap = NewGameMap(level)
+	G.GameMap = NewGameMap(level)
 
 	// initialize rays
-	rays = NewRays()
+	G.Rays = NewRays()
 
 	// initialize the player
-	player = &Player{
+	G.Player = &Player{
 		x:             WindowWidth / 2,
 		y:             WindowHeight / 2,
 		width:         1,
@@ -160,11 +146,11 @@ func setup() {
 	}
 
 	// initialize the color buffer
-	colorBuffer = NewColorBuffer(WindowWidth, WindowHeight)
+	G.ColorBuffer = NewColorBuffer(WindowWidth, WindowHeight)
 
 	// create color buffer texture
 	var err error
-	colorBufferTexture, err = renderer.CreateTexture(
+	G.ColorBufferTexture, err = G.Renderer.CreateTexture(
 		sdl.PIXELFORMAT_ABGR8888, // endianess https://forums.libsdl.org/viewtopic.php?p=39284
 		sdl.TEXTUREACCESS_STREAMING,
 		WindowWidth,
@@ -181,7 +167,7 @@ func update(elapsedMS float64) {
 	// deltaTime := float64(sdl.GetTicks()-ticksLastFrame) / 1000.0
 	// ticksLastFrame = sdl.GetTicks()
 
-	player.update(elapsedMS*1000.0, gameMap)
+	G.Player.Update(elapsedMS * 1000.0)
 
 	castAllRays()
 
@@ -194,17 +180,17 @@ func update(elapsedMS float64) {
 
 func renderColorBuffer() {
 	// update the sdl texture
-	colorBufferTexture.Update(nil, colorBuffer.Pixels, colorBuffer.GetPitch())
+	G.ColorBufferTexture.Update(nil, G.ColorBuffer.Pixels, G.ColorBuffer.GetPitch())
 
 	// copy the texture to the renderer
-	renderer.Copy(colorBufferTexture, nil, nil) // nil and nil since we want to use the entire texture (src and dest used if you want to get a subset of the texture)
+	G.Renderer.Copy(G.ColorBufferTexture, nil, nil) // nil and nil since we want to use the entire texture (src and dest used if you want to get a subset of the texture)
 }
 
 func project3d() {
 	for i := 0; i < NumRays; i++ {
-		ray := rays[i]
+		ray := G.Rays[i]
 		// calculate perpendicular distance to remove the fisheye effect
-		perpendicularDistance := ray.distance * math.Cos(ray.angle-player.rotationAngle)
+		perpendicularDistance := ray.distance * math.Cos(ray.angle-G.Player.rotationAngle)
 		distanceToProjPlane := (WindowWidth / 2) / math.Tan(FOV/2)
 		projectedWallHeight := (TileSize / perpendicularDistance) * distanceToProjPlane
 
@@ -223,7 +209,7 @@ func project3d() {
 
 		// set color for the ceiling
 		for y := 0; y < wallTopPixel; y++ {
-			colorBuffer.Set(i, y, 0x333333FF)
+			G.ColorBuffer.Set(i, y, 0x333333FF)
 		}
 
 		// same for all the columns of X
@@ -239,35 +225,35 @@ func project3d() {
 			distanceFromTop := y + (wallStripHeight / 2) - (WindowHeight / 2)
 			textureOffsetY := float64(distanceFromTop) * float64(TextureHeight) / float64(wallStripHeight)
 
-			texel := textures["redbrick"].NRGBAAt(int(textureOffsetX), int(textureOffsetY))
+			texel := G.Textures["redbrick"].NRGBAAt(int(textureOffsetX), int(textureOffsetY))
 			var c uint32 = uint32(texel.R)<<24 | uint32(texel.G)<<16 | uint32(texel.B)<<8 | uint32(texel.A)
-			colorBuffer.Set(i, y, c)
+			G.ColorBuffer.Set(i, y, c)
 		}
 
 		// set color for the floor
 		for y := wallBottomPixel; y < WindowHeight; y++ {
-			colorBuffer.Set(i, y, 0x777777FF)
+			G.ColorBuffer.Set(i, y, 0x777777FF)
 		}
 	}
 }
 
 func render() {
-	renderer.SetDrawColor(0, 0, 0, 255)
-	renderer.Clear() // clear back buffer
+	G.Renderer.SetDrawColor(0, 0, 0, 255)
+	G.Renderer.Clear() // clear back buffer
 
 	project3d()
 	renderColorBuffer()
 
 	// render all game objects for current frame
-	gameMap.render(renderer)
-	player.render(renderer)
+	G.GameMap.Render()
+	G.Player.Render()
 
-	for _, ray := range rays {
-		ray.render(renderer, player.x, player.y)
+	for _, ray := range G.Rays {
+		ray.Render(G.Renderer, G.Player.x, G.Player.y)
 	}
 
 	// swap current buffer with back buffer
-	renderer.Present()
+	G.Renderer.Present()
 }
 
 func processInput() {
@@ -275,29 +261,29 @@ func processInput() {
 		switch t := event.(type) {
 		case *sdl.QuitEvent: // sdl.QUIT
 			// println("Quit")
-			running = false
+			G.Running = false
 		case *sdl.KeyboardEvent:
 			key := t.Keysym.Sym
 			if t.Type == sdl.KEYDOWN {
 				switch key {
 				case sdl.K_ESCAPE:
-					running = false
+					G.Running = false
 				case sdl.K_UP:
-					player.walkDirection = 1
+					G.Player.walkDirection = 1
 				case sdl.K_DOWN:
-					player.walkDirection = -1
+					G.Player.walkDirection = -1
 				case sdl.K_RIGHT:
-					player.turnDirection = 1
+					G.Player.turnDirection = 1
 				case sdl.K_LEFT:
-					player.turnDirection = -1
+					G.Player.turnDirection = -1
 				}
 			}
 			if t.Type == sdl.KEYUP {
 				switch key {
 				case sdl.K_UP, sdl.K_DOWN:
-					player.walkDirection = 0
+					G.Player.walkDirection = 0
 				case sdl.K_RIGHT, sdl.K_LEFT:
-					player.turnDirection = 0
+					G.Player.turnDirection = 0
 				}
 			}
 		}
@@ -306,6 +292,11 @@ func processInput() {
 
 func main() {
 	flag.Parse()
+
+	G = &Game{
+		Running:        false,
+		TicksLastFrame: 0,
+	}
 
 	if err := run(); err != nil {
 		destroy()
@@ -319,8 +310,8 @@ func main() {
 
 	setup()
 
-	running = true
-	for running {
+	G.Running = true
+	for G.Running {
 		start := sdl.GetPerformanceCounter()
 		processInput()
 		update(elapsedMS)

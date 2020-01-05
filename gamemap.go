@@ -8,14 +8,14 @@ import (
 
 // GameMap - comment
 type GameMap struct {
-	level *Level
+	Level *Level
 }
 
 func NewGameMap(l *Level) *GameMap {
-	return &GameMap{level: l}
+	return &GameMap{Level: l}
 }
 
-func (gm *GameMap) hasWallAt(x float64, y float64) bool {
+func (gm *GameMap) HasWallAt(x float64, y float64) bool {
 	if x < 0 || x > WindowWidth || y < 0 || y > WindowHeight {
 		return true
 	}
@@ -23,13 +23,13 @@ func (gm *GameMap) hasWallAt(x float64, y float64) bool {
 	mapGridIndexX := int(math.Floor(x / TileSize))
 	mapGridIndexY := int(math.Floor(y / TileSize))
 
-	return gm.level.At(mapGridIndexY, mapGridIndexX) != 0
+	return gm.Level.At(mapGridIndexY, mapGridIndexX) != 0
 }
 
-func (gm *GameMap) render(renderer *sdl.Renderer) {
+func (gm *GameMap) Render() {
 	// add a rectangle so the walls don't show up when moving around. make the map opaque
-	renderer.SetDrawColor(0, 0, 0, 255)
-	renderer.FillRect(&sdl.Rect{
+	G.Renderer.SetDrawColor(0, 0, 0, 255)
+	G.Renderer.FillRect(&sdl.Rect{
 		X: 0,
 		Y: 0,
 		W: minimapScale(MapNumCols * TileSize),
@@ -42,18 +42,18 @@ func (gm *GameMap) render(renderer *sdl.Renderer) {
 			tileY := i * TileSize // row
 
 			var tileColor uint8 = 0
-			if gm.level.At(i, j) != 0 {
+			if gm.Level.At(i, j) != 0 {
 				tileColor = 255
 			}
 
-			renderer.SetDrawColor(tileColor, tileColor, tileColor, 255)
+			G.Renderer.SetDrawColor(tileColor, tileColor, tileColor, 255)
 			rect := &sdl.Rect{
 				X: int32(MinimapScaleFactor * float64(tileX)),
 				Y: int32(MinimapScaleFactor * float64(tileY)),
 				W: int32(math.Floor(MinimapScaleFactor * TileSize)),
 				H: int32(math.Floor(MinimapScaleFactor * TileSize)),
 			}
-			renderer.FillRect(rect)
+			G.Renderer.FillRect(rect)
 		}
 	}
 }

@@ -45,7 +45,7 @@ func NewRay() *Ray {
 	}
 }
 
-func (r *Ray) render(renderer *sdl.Renderer, x, y float64) {
+func (r *Ray) Render(renderer *sdl.Renderer, x, y float64) {
 	renderer.SetDrawColor(255, 0, 0, 30)
 	renderer.DrawLine(
 		int32(MinimapScaleFactor*x),
@@ -55,7 +55,7 @@ func (r *Ray) render(renderer *sdl.Renderer, x, y float64) {
 	)
 }
 
-func (r *Ray) cast(angle float64) *Ray {
+func (r *Ray) Cast(angle float64) *Ray {
 	var xIntercept, yIntercept, xStep, yStep float64
 
 	r.angle = normalizeAngle(angle)
@@ -122,14 +122,14 @@ func (r *Ray) cast(angle float64) *Ray {
 	 * yIntercept += this.isRayFacingDown ?  TILE_SIZE : 0;
 	 *
 	 */
-	yIntercept = math.Floor(player.y/TileSize) * TileSize // this always gets the 'top' Ay coordinate i.e. ray facing up
-	if r.isRayFacingDown {                                // else += 0
+	yIntercept = math.Floor(G.Player.y/TileSize) * TileSize // this always gets the 'top' Ay coordinate i.e. ray facing up
+	if r.isRayFacingDown {                                  // else += 0
 		yIntercept += TileSize
 	}
 
 	// Find the x-coordinate of the closest horizontal grid interception
-	// xIntercept = player.x + ((player.y - yIntercept) / Math.tan(this.angle));
-	xIntercept = player.x + ((yIntercept - player.y) / math.Tan(r.angle))
+	// xIntercept = G.Player.x + ((G.Player.y - yIntercept) / Math.tan(this.angle));
+	xIntercept = G.Player.x + ((yIntercept - G.Player.y) / math.Tan(r.angle))
 
 	// Calculate the increment xstep and ystep
 	yStep = TileSize
@@ -164,10 +164,10 @@ func (r *Ray) cast(angle float64) *Ray {
 		}
 
 		// Found a wall hit
-		if gameMap.hasWallAt(testTouchX, testTouchY) {
+		if G.GameMap.HasWallAt(testTouchX, testTouchY) {
 			horzWallHitX = nextHorzTouchX
 			horzWallHitY = nextHorzTouchY
-			horzWallContent = gameMap.level.At(int(math.Floor(testTouchY/TileSize)), int(math.Floor(testTouchX/TileSize)))
+			horzWallContent = G.GameMap.Level.At(int(math.Floor(testTouchY/TileSize)), int(math.Floor(testTouchX/TileSize)))
 			foundHorizontalWallHit = true
 			break
 		} else {
@@ -190,14 +190,14 @@ func (r *Ray) cast(angle float64) *Ray {
 	vertWallContent := 0
 
 	// Find the x-coordinate of the closest vertical grid interception
-	xIntercept = math.Floor(player.x/TileSize) * TileSize
+	xIntercept = math.Floor(G.Player.x/TileSize) * TileSize
 	if r.isRayFacingRight { // add 32 (tile_size) if facing right
 		xIntercept += TileSize
 	}
 
 	// Find the y-coordinate of the closest vertical grid interception
-	// yIntercept = player.y + ((player.x - xIntercept) * Math.tan(this.angle));
-	yIntercept = player.y + ((xIntercept - player.x) * math.Tan(r.angle))
+	// yIntercept = G.Player.y + ((G.Player.x - xIntercept) * Math.tan(this.angle));
+	yIntercept = G.Player.y + ((xIntercept - G.Player.x) * math.Tan(r.angle))
 
 	// Calculate the increment xstep and ystep
 	xStep = TileSize
@@ -232,10 +232,10 @@ func (r *Ray) cast(angle float64) *Ray {
 			testTouchX = nextVertTouchX - 1
 		}
 
-		if gameMap.hasWallAt(testTouchX, nextVertTouchY) {
+		if G.GameMap.HasWallAt(testTouchX, nextVertTouchY) {
 			vertWallHitX = nextVertTouchX
 			vertWallHitY = nextVertTouchY
-			vertWallContent = gameMap.level.At(int(math.Floor(testTouchY/TileSize)), int(math.Floor(testTouchX/TileSize)))
+			vertWallContent = G.GameMap.Level.At(int(math.Floor(testTouchY/TileSize)), int(math.Floor(testTouchX/TileSize)))
 
 			foundVerticalWallHit = true
 			break
@@ -248,11 +248,11 @@ func (r *Ray) cast(angle float64) *Ray {
 	// Calculate both horizontal and vertical distances and choose the smallest value
 	horzHitDistance := math.MaxFloat64 // if we didn't get a hit then we basically just set it to a really large value
 	if foundHorizontalWallHit {
-		horzHitDistance = distanceBetweenPoints(player.x, player.y, horzWallHitX, horzWallHitY)
+		horzHitDistance = distanceBetweenPoints(G.Player.x, G.Player.y, horzWallHitX, horzWallHitY)
 	}
 	vertHitDistance := math.MaxFloat64 // if we didn't get a hit then we basically just set it to a really large value
 	if foundVerticalWallHit {
-		vertHitDistance = distanceBetweenPoints(player.x, player.y, vertWallHitX, vertWallHitY)
+		vertHitDistance = distanceBetweenPoints(G.Player.x, G.Player.y, vertWallHitX, vertWallHitY)
 	}
 
 	// Compare the two and store the smallest one
