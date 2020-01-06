@@ -28,8 +28,8 @@ func (gm *GameMap) HasWallAt(x float64, y float64) bool {
 
 func (gm *GameMap) Render() {
 	// add a rectangle so the walls don't show up when moving around. make the map opaque
-	G.Renderer.SetDrawColor(0, 0, 0, 255)
-	G.Renderer.FillRect(&sdl.Rect{
+	Renderer.SetDrawColor(0, 0, 0, 255)
+	Renderer.FillRect(&sdl.Rect{
 		X: 0,
 		Y: 0,
 		W: minimapScale(MapNumCols * TileSize),
@@ -46,14 +46,14 @@ func (gm *GameMap) Render() {
 				tileColor = 255
 			}
 
-			G.Renderer.SetDrawColor(tileColor, tileColor, tileColor, 255)
+			Renderer.SetDrawColor(tileColor, tileColor, tileColor, 255)
 			rect := &sdl.Rect{
 				X: int32(MinimapScaleFactor * float64(tileX)),
 				Y: int32(MinimapScaleFactor * float64(tileY)),
 				W: int32(math.Floor(MinimapScaleFactor * TileSize)),
 				H: int32(math.Floor(MinimapScaleFactor * TileSize)),
 			}
-			G.Renderer.FillRect(rect)
+			Renderer.FillRect(rect)
 		}
 	}
 }

@@ -21,14 +21,14 @@ type Player struct {
 }
 
 func (p *Player) Render() {
-	G.Renderer.SetDrawColor(255, 255, 255, 255)
+	Renderer.SetDrawColor(255, 255, 255, 255)
 	rect := &sdl.Rect{
 		X: int32(MinimapScaleFactor * p.x),
 		Y: int32(MinimapScaleFactor * p.y),
 		W: int32(MinimapScaleFactor * p.width),
 		H: int32(MinimapScaleFactor * p.height),
 	}
-	G.Renderer.FillRect(rect)
+	Renderer.FillRect(rect)
 
 	/*
 	 * Add a line to see which angle my player is turning
@@ -42,7 +42,7 @@ func (p *Player) Render() {
 	 *
 	 */
 	length := 30 * MinimapScaleFactor
-	G.Renderer.DrawLine(
+	Renderer.DrawLine(
 		int32(MinimapScaleFactor*p.x),
 		int32(MinimapScaleFactor*p.y),
 		int32(MinimapScaleFactor*p.x+math.Cos(p.rotationAngle)*length),

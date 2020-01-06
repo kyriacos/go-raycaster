@@ -18,8 +18,18 @@ import (
 	"github.com/veandco/go-sdl2/sdl"
 )
 
+// All the game globals
 var (
-	G       *Game
+	Window   *sdl.Window   // The main window that we render to
+	Renderer *sdl.Renderer // The SDL renderer
+
+	CB        *ColorBuffer // The instance of ColorBuffer we use to update every tick
+	CBTexture *sdl.Texture
+
+	Textures map[string]*image.NRGBA // Stores all the texture images
+
+	G *Game // The game instance
+
 	showFPS = flag.Bool("showFPS", false, "Show current FPS and on exit display the average FPS.")
 )
 
@@ -40,7 +50,7 @@ func run() (err error) {
 		return
 	}
 
-	G.Window, err = sdl.CreateWindow(
+	Window, err = sdl.CreateWindow(
 		"RayCaster",
 		sdl.WINDOWPOS_CENTERED,
 		sdl.WINDOWPOS_CENTERED,
@@ -52,13 +62,13 @@ func run() (err error) {
 		return
 	}
 
-	G.Renderer, err = sdl.CreateRenderer(G.Window, -1, sdl.RENDERER_SOFTWARE) // -1 is the default driver (the graphics driver)
+	Renderer, err = sdl.CreateRenderer(Window, -1, sdl.RENDERER_SOFTWARE) // -1 is the default driver (the graphics driver)
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "Error creating SDL renderer: %s\n", err)
 		return
 	}
 
-	if err = G.Renderer.SetDrawBlendMode(sdl.BLENDMODE_BLEND); err != nil {
+	if err = Renderer.SetDrawBlendMode(sdl.BLENDMODE_BLEND); err != nil {
 		fmt.Fprintf(os.Stderr, "Failed to set blend mode: %s", err)
 		return
 	}
@@ -69,9 +79,9 @@ func run() (err error) {
 func destroy() {
 	// defer order?
 	defer sdl.Quit()
-	defer G.Window.Destroy()
-	defer G.Renderer.Destroy()
-	defer G.ColorBufferTexture.Destroy()
+	defer Window.Destroy()
+	defer Renderer.Destroy()
+	defer CBTexture.Destroy()
 }
 
 func loadTextures() {
@@ -81,7 +91,7 @@ func loadTextures() {
 		log.Fatal(err)
 	}
 
-	G.Textures = make(map[string]*image.NRGBA, len(files))
+	Textures = make(map[string]*image.NRGBA, len(files))
 	for _, file := range files {
 		filename := file.Name()
 		f, err := os.Open(imageDir + filename)
@@ -95,7 +105,7 @@ func loadTextures() {
 			log.Fatalf("Could not decode image from file: %s. Error: %s", err, imageDir+filename)
 		}
 
-		G.Textures[strings.TrimSuffix(filename, path.Ext(filename))] = imgNRGBA
+		Textures[strings.TrimSuffix(filename, path.Ext(filename))] = imgNRGBA
 	}
 }
 
@@ -146,11 +156,11 @@ func setup() {
 	}
 
 	// initialize the color buffer
-	G.ColorBuffer = NewColorBuffer(WindowWidth, WindowHeight)
+	CB = NewColorBuffer(WindowWidth, WindowHeight)
 
 	// create color buffer texture
 	var err error
-	G.ColorBufferTexture, err = G.Renderer.CreateTexture(
+	CBTexture, err = Renderer.CreateTexture(
 		sdl.PIXELFORMAT_ABGR8888, // endianess https://forums.libsdl.org/viewtopic.php?p=39284
 		sdl.TEXTUREACCESS_STREAMING,
 		WindowWidth,
@@ -164,26 +174,17 @@ func setup() {
 }
 
 func update(elapsedMS float64) {
-	// deltaTime := float64(sdl.GetTicks()-ticksLastFrame) / 1000.0
-	// ticksLastFrame = sdl.GetTicks()
-
 	G.Player.Update(elapsedMS * 1000.0)
 
 	castAllRays()
-
-	/* stop and waste some time until we reach the target frame time length we want
-	 * timeout = SDL_GetTicks() + frameTimeLength
-	 * !SDL_TICKS_PASSED(SDL.GetTicks(), timeout)
-	 */
-	// sdl.Delay(uint32(FrameTimeLength - deltaTime))
 }
 
 func renderColorBuffer() {
 	// update the sdl texture
-	G.ColorBufferTexture.Update(nil, G.ColorBuffer.Pixels, G.ColorBuffer.GetPitch())
+	CBTexture.Update(nil, CB.Pixels, CB.GetPitch())
 
 	// copy the texture to the renderer
-	G.Renderer.Copy(G.ColorBufferTexture, nil, nil) // nil and nil since we want to use the entire texture (src and dest used if you want to get a subset of the texture)
+	Renderer.Copy(CBTexture, nil, nil) // nil and nil since we want to use the entire texture (src and dest used if you want to get a subset of the texture)
 }
 
 func project3d() {
@@ -209,7 +210,7 @@ func project3d() {
 
 		// set color for the ceiling
 		for y := 0; y < wallTopPixel; y++ {
-			G.ColorBuffer.Set(i, y, 0x333333FF)
+			CB.Set(i, y, 0x333333FF)
 		}
 
 		// same for all the columns of X
@@ -225,21 +226,21 @@ func project3d() {
 			distanceFromTop := y + (wallStripHeight / 2) - (WindowHeight / 2)
 			textureOffsetY := float64(distanceFromTop) * float64(TextureHeight) / float64(wallStripHeight)
 
-			texel := G.Textures["redbrick"].NRGBAAt(int(textureOffsetX), int(textureOffsetY))
+			texel := Textures["redbrick"].NRGBAAt(int(textureOffsetX), int(textureOffsetY))
 			var c uint32 = uint32(texel.R)<<24 | uint32(texel.G)<<16 | uint32(texel.B)<<8 | uint32(texel.A)
-			G.ColorBuffer.Set(i, y, c)
+			CB.Set(i, y, c)
 		}
 
 		// set color for the floor
 		for y := wallBottomPixel; y < WindowHeight; y++ {
-			G.ColorBuffer.Set(i, y, 0x777777FF)
+			CB.Set(i, y, 0x777777FF)
 		}
 	}
 }
 
 func render() {
-	G.Renderer.SetDrawColor(0, 0, 0, 255)
-	G.Renderer.Clear() // clear back buffer
+	Renderer.SetDrawColor(0, 0, 0, 255)
+	Renderer.Clear() // clear back buffer
 
 	project3d()
 	renderColorBuffer()
@@ -249,11 +250,11 @@ func render() {
 	G.Player.Render()
 
 	for _, ray := range G.Rays {
-		ray.Render(G.Renderer, G.Player.x, G.Player.y)
+		ray.Render(Renderer, G.Player.x, G.Player.y)
 	}
 
 	// swap current buffer with back buffer
-	G.Renderer.Present()
+	Renderer.Present()
 }
 
 func processInput() {
@@ -320,10 +321,10 @@ func main() {
 
 		elapsedMS = float64(end-start) / float64(sdl.GetPerformanceFrequency()*1000.0)
 
-		sdl.Delay(uint32(math.Floor(16.666 - elapsedMS)))
-		elapsed := float64(end-start) / float64(sdl.GetPerformanceFrequency())
+		sdl.Delay(uint32(math.Floor(FrameTimeLength - elapsedMS)))
 
 		if *showFPS {
+			elapsed := float64(end-start) / float64(sdl.GetPerformanceFrequency())
 			counter++
 			currentFPS := 1.0 / elapsed
 			sumFPS += currentFPS
