@@ -50,8 +50,6 @@ func (p *Player) Render() {
 	)
 }
 
-// tick
-// note: maybe i don't need to pass the gamemap and just have the collision detection inside my 'main' update
 func (p *Player) Update(deltaTime float64) {
 	p.move(deltaTime)
 }

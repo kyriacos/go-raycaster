@@ -314,14 +314,16 @@ func main() {
 	G.Running = true
 	for G.Running {
 		start := sdl.GetPerformanceCounter()
+
 		processInput()
 		update(elapsedMS)
 		render()
+
 		end := sdl.GetPerformanceCounter()
 
 		elapsedMS = float64(end-start) / float64(sdl.GetPerformanceFrequency()*1000.0)
 
-		sdl.Delay(uint32(math.Floor(FrameTimeLength - elapsedMS)))
+		sdl.Delay(uint32(math.Floor(FrameTimeLength - elapsedMS))) // pause until we reach the target frames
 
 		if *showFPS {
 			elapsed := float64(end-start) / float64(sdl.GetPerformanceFrequency())
