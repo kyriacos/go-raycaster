@@ -15,6 +15,7 @@ import (
 	"path"
 	"strings"
 
+	"github.com/kyriacos/colorbuffer"
 	"github.com/veandco/go-sdl2/sdl"
 )
 
@@ -23,7 +24,7 @@ var (
 	Window   *sdl.Window   // The main window that we render to
 	Renderer *sdl.Renderer // The SDL renderer
 
-	CB        *ColorBuffer // The instance of ColorBuffer we use to update every tick
+	CB        *colorbuffer.ColorBuffer // The instance of ColorBuffer we use to update every tick
 	CBTexture *sdl.Texture
 
 	Textures map[string]*image.NRGBA // Stores all the texture images
@@ -156,7 +157,7 @@ func setup() {
 	}
 
 	// initialize the color buffer
-	CB = NewColorBuffer(WindowWidth, WindowHeight)
+	CB = colorbuffer.NewColorBuffer(WindowWidth, WindowHeight)
 
 	// create color buffer texture
 	var err error
@@ -181,7 +182,7 @@ func update(elapsedMS float64) {
 
 func renderColorBuffer() {
 	// update the sdl texture
-	CBTexture.Update(nil, CB.Pixels, CB.GetPitch())
+	CBTexture.Update(nil, CB.Pixels, CB.Stride)
 
 	// copy the texture to the renderer
 	Renderer.Copy(CBTexture, nil, nil) // nil and nil since we want to use the entire texture (src and dest used if you want to get a subset of the texture)
